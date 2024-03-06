@@ -1,13 +1,18 @@
-let port = process.env.PORT || 5000;
-
-let IO = require("socket.io")(port, {
+const express = require('express');
+const app = express();
+const http = require('http');
+const server = http.createServer(app);
+const { Server } = require("socket.io");
+const io = new Server(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
   },
 });
 
-IO.use((socket, next) => {
+let port = process.env.PORT || 5000;
+
+io.use((socket, next) => {
   if (socket.handshake.query) {
     let callerId = socket.handshake.query.callerId;
     socket.user = callerId;
@@ -15,7 +20,7 @@ IO.use((socket, next) => {
   }
 });
 
-IO.on("connection", (socket) => {
+io.on("connection", (socket) => {
   console.log(socket.user, "Connected");
   socket.join(socket.user);
 
@@ -48,4 +53,8 @@ IO.on("connection", (socket) => {
       iceCandidate: iceCandidate,
     });
   });
+});
+
+server.listen(port, () => {
+  console.log('listening on `${port}`');
 });
